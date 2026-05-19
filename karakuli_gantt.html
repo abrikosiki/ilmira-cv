@@ -6,464 +6,264 @@
 <title>Karakuli — Диаграмма Ганта</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #F7F6F2;
-  --surface: #FFFFFF;
-  --border: #E4E2DA;
-  --text: #1A1916;
-  --muted: #9A9890;
-  --artem: #3A7BF7;
-  --artem-light: #EBF1FF;
-  --ilmira: #0FA874;
-  --ilmira-light: #E6F8F2;
-  --igor: #D14F8A;
-  --igor-light: #FAEDF4;
-  --none: #B0AD9E;
-  --none-light: #F2F1EC;
-  --today: #FF5C2B;
-  --row-h: 44px;
-  --label-w: 230px;
-  --who-w: 90px;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F2;--surface:#fff;--border:#E4E2DA;--text:#1A1916;--muted:#9A9890;
+  --artem:#3A7BF7;--artem-l:#EBF1FF;
+  --ilmira:#0FA874;--ilmira-l:#E6F8F2;
+  --igor:#D14F8A;--igor-l:#FAEDF4;
+  --none:#B0AD9E;--none-l:#F2F1EC;
+  --today:#FF5C2B;
+  --row-h:46px;--label-w:220px;--who-w:96px;--check-w:38px;--del-w:34px;
 }
-
-body {
-  font-family: 'Manrope', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  padding: 40px 32px;
-}
-
-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.logo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.logo-name {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--text);
-}
-
-.logo-sub {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.legend {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: 0.2px;
-}
-
-.legend-dot {
-  width: 10px; height: 10px;
-  border-radius: 3px;
-}
-
-.gantt-wrap {
-  background: var(--surface);
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-
-.gantt-header {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 10;
-}
-
-.col-label {
-  min-width: var(--label-w);
-  width: var(--label-w);
-  padding: 12px 20px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.col-who {
-  min-width: var(--who-w);
-  width: var(--who-w);
-  padding: 12px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.timeline-header {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-.day-col {
-  flex: 1;
-  min-width: 0;
-  text-align: center;
-  padding: 8px 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  align-items: center;
-}
-
-.day-col:last-child { border-right: none; }
-.day-col .day-num { font-size: 14px; font-weight: 700; color: var(--text); }
-.day-col.today-col .day-num { color: var(--today); }
-.day-col.today-col { background: #FFF5F2; }
-
-.task-row {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-  min-height: var(--row-h);
-  transition: background 0.1s;
-}
-
-.task-row:last-child { border-bottom: none; }
-.task-row:hover { background: #FAFAF8; }
-
-.task-label {
-  min-width: var(--label-w);
-  width: var(--label-w);
-  padding: 0 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-  line-height: 1.35;
-}
-
-.task-who {
-  min-width: var(--who-w);
-  width: var(--who-w);
-  padding: 0 12px;
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.who-badge {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 5px;
-  letter-spacing: 0.2px;
-  white-space: nowrap;
-}
-
-.timeline-row {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.day-slot {
-  flex: 1;
-  min-width: 0;
-  height: var(--row-h);
-  border-right: 1px solid var(--border);
-  position: relative;
-}
-
-.day-slot:last-child { border-right: none; }
-.day-slot.today-slot { background: #FFF5F2; }
-
-.bar-container {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-  padding: 0 3px;
-  pointer-events: none;
-}
-
-.bar {
-  height: 20px;
-  border-radius: 5px;
-  width: 100%;
-}
-
-.today-line {
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 2px;
-  background: var(--today);
-  opacity: 0.6;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.deadline-dot {
-  position: absolute;
-  right: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid rgba(0,0,0,0.25);
-  z-index: 6;
-  pointer-events: none;
-}
-
-.summary-row {
-  display: flex;
-  gap: 24px;
-  padding: 20px 20px;
-  border-top: 1px solid var(--border);
-  background: #FAFAF8;
-  flex-wrap: wrap;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-num {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.stat-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-
-footer {
-  margin-top: 20px;
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
-}
+body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:32px 24px}
+header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.logo-name{font-size:21px;font-weight:700;letter-spacing:-.5px}
+.logo-sub{font-size:13px;color:var(--muted);font-weight:500;margin-top:2px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.li{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}
+.ld{width:10px;height:10px;border-radius:3px}
+.add-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;font-size:13px;font-weight:600;font-family:'Manrope',sans-serif;background:var(--text);color:#fff;border:none;border-radius:8px;cursor:pointer;transition:opacity .15s}
+.add-btn:hover{opacity:.82}
+.hint{font-size:11px;color:var(--muted);margin-bottom:10px}
+.hint b{font-weight:600;color:#666}
+.gantt-wrap{background:var(--surface);border-radius:16px;border:1px solid var(--border);overflow:hidden}
+.gantt-head{display:flex;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:20}
+.hcell{padding:10px 0;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;border-right:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.hcell.hl{justify-content:flex-start;padding:10px 14px}
+.hcell:last-child{border-right:none}
+.day-hcell{flex:1;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 0;font-size:10px;font-weight:600;color:var(--muted);border-right:1px solid var(--border)}
+.day-hcell:last-child{border-right:none}
+.day-hcell .dn{font-size:13px;font-weight:700;color:var(--text)}
+.day-hcell.today-h .dn{color:var(--today)}
+.day-hcell.today-h{background:#FFF5F2}
+.task-row{display:flex;border-bottom:1px solid var(--border);align-items:stretch;min-height:var(--row-h);transition:background .1s}
+.task-row:last-child{border-bottom:none}
+.task-row:hover{background:#FAFAF8}
+.task-row.done-row .task-name-input{text-decoration:line-through;color:var(--muted)}
+.cell{border-right:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.cell:last-child{border-right:none}
+.check-cell{width:var(--check-w);min-width:var(--check-w)}
+.check-cell input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--ilmira)}
+.label-cell{width:var(--label-w);min-width:var(--label-w);padding:0 12px;justify-content:flex-start}
+.task-name-input{font-size:13px;font-weight:500;font-family:'Manrope',sans-serif;color:var(--text);background:transparent;border:none;outline:none;width:100%;line-height:1.35}
+.task-name-input:focus{border-bottom:1.5px solid #ccc}
+.who-cell{width:var(--who-w);min-width:var(--who-w);padding:0 8px}
+.who-select{font-size:11px;font-weight:700;font-family:'Manrope',sans-serif;padding:4px 7px;border-radius:5px;border:none;cursor:pointer;outline:none;width:100%}
+.tl-row{flex:1;display:flex;align-items:stretch;position:relative;overflow:hidden}
+.day-slot{flex:1;min-width:0;position:relative;border-right:1px solid var(--border);cursor:pointer}
+.day-slot:last-child{border-right:none}
+.day-slot.today-s{background:#FFF5F2}
+.day-slot:hover{background:rgba(0,0,0,.03)}
+.bar-wrap{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;pointer-events:none}
+.bar{height:22px;border-radius:0;flex:1}
+.bar.bs{border-top-left-radius:5px;border-bottom-left-radius:5px;margin-left:3px}
+.bar.be{border-top-right-radius:5px;border-bottom-right-radius:5px;margin-right:3px}
+.bar.bse{border-radius:5px;margin:0 3px}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--today);opacity:.55;z-index:5;pointer-events:none}
+.ddot{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.22);z-index:6;pointer-events:none}
+.del-cell{width:var(--del-w);min-width:var(--del-w)}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px;border-radius:4px;transition:color .1s}
+.del-btn:hover{color:#E24B4A}
+.summary{display:flex;gap:20px;padding:16px 20px;border-top:1px solid var(--border);background:#FAFAF8;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;gap:1px}
+.stat-n{font-size:19px;font-weight:700}
+.stat-l{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+footer{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
+  <div>
     <div class="logo-name">Karakuli — план спринта</div>
-    <div class="logo-sub">19–26 мая 2026</div>
+    <div class="logo-sub">19–30 мая 2026</div>
   </div>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--artem)"></div>Артём</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--ilmira)"></div>Ильмира</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--igor)"></div>Игорь</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--none)"></div>Не назначено</div>
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <div class="legend" id="legend"></div>
+    <button class="add-btn" onclick="addTask()">+ Задача</button>
   </div>
 </header>
 
+<p class="hint">Клик по ячейке — переместить дедлайн &nbsp;·&nbsp; <b>Shift+клик</b> — переместить начало &nbsp;·&nbsp; ✕ — удалить строку</p>
+
 <div class="gantt-wrap">
-  <div class="gantt-header">
-    <div class="col-label">Задача</div>
-    <div class="col-who">Кто</div>
-    <div class="timeline-header" id="timelineHeader"></div>
-  </div>
+  <div class="gantt-head" id="ganttHead"></div>
   <div id="ganttBody"></div>
-  <div class="summary-row" id="summaryRow"></div>
+  <div class="summary" id="summary"></div>
 </div>
 
 <footer>Karakuli Math School · Sprint May 2026</footer>
 
 <script>
-const START = new Date('2026-05-19');
-const END   = new Date('2026-05-26');
+const START_STR = '2026-05-19';
+const END_STR   = '2026-05-30';
+const DAYS_RU   = ['вс','пн','вт','ср','чт','пт','сб'];
 
-function daysRange(s, e) {
-  const days = [];
-  let cur = new Date(s);
-  while (cur <= e) { days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+function daysRange(s,e){
+  const days=[];let cur=new Date(s);const end=new Date(e);
+  while(cur<=end){days.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
   return days;
 }
+const ALL_DAYS  = daysRange(START_STR,END_STR);
+const TODAY     = new Date();TODAY.setHours(0,0,0,0);
+const TODAY_STR = TODAY.toISOString().slice(0,10);
 
-const DAYS = daysRange(START, END);
-const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-
-const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-const DAYS_RU = ['вс','пн','вт','ср','чт','пт','сб'];
-
-const WHO_STYLES = {
-  'Артём':    { bg: 'var(--artem)',  light: 'var(--artem-light)',  text: '#fff' },
-  'Ильмира':  { bg: 'var(--ilmira)', light: 'var(--ilmira-light)', text: '#fff' },
-  'Игорь':    { bg: 'var(--igor)',   light: 'var(--igor-light)',   text: '#fff' },
-  '':         { bg: 'var(--none)',   light: 'var(--none-light)',   text: '#fff' },
+const PERSONS   = ['Артём','Ильмира','Игорь',''];
+const WC = {
+  'Артём':  {bg:'#3A7BF7',lt:'#EBF1FF'},
+  'Ильмира':{bg:'#0FA874',lt:'#E6F8F2'},
+  'Игорь':  {bg:'#D14F8A',lt:'#FAEDF4'},
+  '':       {bg:'#B0AD9E',lt:'#F2F1EC'},
 };
 
-const tasks = [
-  { name: 'Аудит сайта',                          start: '2026-05-19', end: '2026-05-20', who: 'Артём' },
-  { name: 'Сформулировать сообщение блогерам',    start: '2026-05-19', end: '2026-05-21', who: 'Артём' },
-  { name: 'Поговорить с сейлзом Ваней',           start: '2026-05-19', end: '2026-05-21', who: 'Артём' },
-  { name: 'Белый WhatsApp — изучить',             start: '2026-05-19', end: '2026-05-21', who: 'Ильмира' },
-  { name: 'Ждём список блогеров',                 start: '2026-05-19', end: '2026-05-22', who: 'Игорь' },
-  { name: 'Написать блогерам',                    start: '2026-05-19', end: '2026-05-23', who: 'Ильмира' },
-  { name: 'Подготовить сайт к лидам',             start: '2026-05-19', end: '2026-05-22', who: 'Ильмира' },
-  { name: 'План Б если WhatsApp блочат',          start: '2026-05-19', end: '2026-05-22', who: '' },
-  { name: 'Написать Антонии/Кате по тьюторам',   start: '2026-05-19', end: '2026-05-24', who: 'Артём' },
-  { name: 'Страйп — сделать',                     start: '2026-05-19', end: '2026-05-24', who: 'Артём' },
-  { name: 'Поговорить с мамой Ванессой',          start: '2026-05-19', end: '2026-05-24', who: 'Артём' },
-  { name: 'Текст для креативов (таргет)',         start: '2026-05-19', end: '2026-05-25', who: 'Артём' },
-  { name: 'Узнать слоты тьюторов → сайт',        start: '2026-05-19', end: '2026-05-25', who: 'Ильмира' },
-  { name: 'Оплатить Zoom аккаунт',               start: '2026-05-19', end: '2026-05-25', who: 'Ильмира' },
-  { name: 'Создать креативы',                     start: '2026-05-19', end: '2026-05-26', who: 'Ильмира' },
-  { name: 'Запустить таргет',                     start: '2026-05-19', end: '2026-05-26', who: 'Ильмира' },
-  { name: '6 постов для инсты',                   start: '2026-05-19', end: '2026-05-23', who: 'Ильмира' },
+let tasks=[
+  {id:1, name:'Аудит сайта',                       start:'2026-05-19',end:'2026-05-20',who:'Артём',  done:false},
+  {id:2, name:'Сформулировать сообщение блогерам', start:'2026-05-19',end:'2026-05-21',who:'Артём',  done:false},
+  {id:3, name:'Поговорить с сейлзом Ваней',        start:'2026-05-19',end:'2026-05-21',who:'Артём',  done:false},
+  {id:4, name:'Белый WhatsApp — изучить',          start:'2026-05-19',end:'2026-05-21',who:'Ильмира',done:false},
+  {id:5, name:'Ждём список блогеров',              start:'2026-05-19',end:'2026-05-22',who:'Игорь',  done:false},
+  {id:6, name:'Написать блогерам',                 start:'2026-05-19',end:'2026-05-23',who:'Ильмира',done:false},
+  {id:7, name:'Подготовить сайт к лидам',          start:'2026-05-19',end:'2026-05-22',who:'Ильмира',done:false},
+  {id:8, name:'План Б если WhatsApp блочат',       start:'2026-05-19',end:'2026-05-22',who:'',       done:false},
+  {id:9, name:'Написать Антонии/Кате по тьюторам', start:'2026-05-19',end:'2026-05-24',who:'Артём',  done:false},
+  {id:10,name:'Страйп — сделать',                  start:'2026-05-19',end:'2026-05-24',who:'Артём',  done:false},
+  {id:11,name:'Поговорить с мамой Ванессой',       start:'2026-05-19',end:'2026-05-24',who:'Артём',  done:false},
+  {id:12,name:'Текст для креативов (таргет)',      start:'2026-05-19',end:'2026-05-25',who:'Артём',  done:false},
+  {id:13,name:'Узнать слоты тьюторов → сайт',     start:'2026-05-19',end:'2026-05-25',who:'Ильмира',done:false},
+  {id:14,name:'Оплатить Zoom аккаунт',             start:'2026-05-19',end:'2026-05-25',who:'Ильмира',done:false},
+  {id:15,name:'Создать креативы',                  start:'2026-05-19',end:'2026-05-26',who:'Ильмира',done:false},
+  {id:16,name:'Запустить таргет',                  start:'2026-05-19',end:'2026-05-26',who:'Ильмира',done:false},
+  {id:17,name:'6 постов для инсты',                start:'2026-05-19',end:'2026-05-23',who:'Ильмира',done:false},
 ];
+let nextId=18;
 
-function dateStr(d) { return d.toISOString().slice(0,10); }
+function mk(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
 
-function isToday(d) { return dateStr(d) === dateStr(TODAY); }
+function render(){
+  buildHead(); buildBody(); buildSummary(); buildLegend();
+}
 
-// Build header
-const header = document.getElementById('timelineHeader');
-DAYS.forEach(d => {
-  const col = document.createElement('div');
-  col.className = 'day-col' + (isToday(d) ? ' today-col' : '');
-  col.innerHTML = `<span class="day-num">${d.getDate()}</span><span>${DAYS_RU[d.getDay()]}</span>`;
-  header.appendChild(col);
-});
-
-// Build rows
-const body = document.getElementById('ganttBody');
-tasks.forEach(t => {
-  const ws = WHO_STYLES[t.who] || WHO_STYLES[''];
-  const startD = new Date(t.start);
-  const endD   = new Date(t.end);
-
-  const row = document.createElement('div');
-  row.className = 'task-row';
-
-  // Label
-  const label = document.createElement('div');
-  label.className = 'task-label';
-  label.textContent = t.name;
-  row.appendChild(label);
-
-  // Who
-  const whoCell = document.createElement('div');
-  whoCell.className = 'task-who';
-  const badge = document.createElement('span');
-  badge.className = 'who-badge';
-  badge.style.background = ws.light;
-  badge.style.color = ws.bg;
-  badge.textContent = t.who || '—';
-  whoCell.appendChild(badge);
-  row.appendChild(whoCell);
-
-  // Timeline
-  const tl = document.createElement('div');
-  tl.className = 'timeline-row';
-
-  DAYS.forEach((d, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'day-slot' + (isToday(d) ? ' today-slot' : '');
-
-    const dStr = dateStr(d);
-    const inRange = dStr >= t.start && dStr <= t.end;
-    const isStart = dStr === t.start;
-    const isEnd   = dStr === t.end;
-
-    if (inRange) {
-      const bc = document.createElement('div');
-      bc.className = 'bar-container';
-      const bar = document.createElement('div');
-      bar.className = 'bar';
-      bar.style.background = ws.bg;
-      if (isStart) { bar.style.borderTopLeftRadius = '5px'; bar.style.borderBottomLeftRadius = '5px'; bar.style.marginLeft = '4px'; }
-      if (isEnd)   { bar.style.borderTopRightRadius = '5px'; bar.style.borderBottomRightRadius = '5px'; bar.style.marginRight = '4px'; }
-      if (!isStart) { bar.style.borderTopLeftRadius = '0'; bar.style.borderBottomLeftRadius = '0'; bar.style.marginLeft = '0'; }
-      if (!isEnd)   { bar.style.borderTopRightRadius = '0'; bar.style.borderBottomRightRadius = '0'; bar.style.marginRight = '0'; }
-      bc.appendChild(bar);
-      slot.appendChild(bc);
-
-      if (isEnd) {
-        const dot = document.createElement('div');
-        dot.className = 'deadline-dot';
-        dot.title = `Дедлайн: ${d.getDate()} ${MONTHS[d.getMonth()]}`;
-        slot.appendChild(dot);
-      }
-    }
-
-    if (isToday(d)) {
-      const line = document.createElement('div');
-      line.className = 'today-line';
-      slot.appendChild(line);
-    }
-
-    tl.appendChild(slot);
+function buildHead(){
+  const h=document.getElementById('ganttHead');h.innerHTML='';
+  const c1=mk('div','hcell');c1.style.cssText='width:var(--check-w);min-width:var(--check-w)';h.appendChild(c1);
+  const c2=mk('div','hcell hl');c2.textContent='Задача';c2.style.cssText='width:var(--label-w);min-width:var(--label-w)';h.appendChild(c2);
+  const c3=mk('div','hcell');c3.textContent='Кто';c3.style.cssText='width:var(--who-w);min-width:var(--who-w)';h.appendChild(c3);
+  const tl=mk('div','');tl.style.cssText='flex:1;display:flex;overflow:hidden';
+  ALL_DAYS.forEach(d=>{
+    const dt=new Date(d);
+    const dc=mk('div','day-hcell'+(d===TODAY_STR?' today-h':''));
+    dc.innerHTML=`<span class="dn">${dt.getDate()}</span><span>${DAYS_RU[dt.getDay()]}</span>`;
+    tl.appendChild(dc);
   });
+  h.appendChild(tl);
+  const c4=mk('div','hcell');c4.style.cssText='width:var(--del-w);min-width:var(--del-w)';h.appendChild(c4);
+}
 
-  row.appendChild(tl);
-  body.appendChild(row);
-});
+function buildBody(){
+  const b=document.getElementById('ganttBody');b.innerHTML='';
+  tasks.forEach(t=>{
+    const ws=WC[t.who]||WC[''];
+    const row=mk('div','task-row'+(t.done?' done-row':''));
 
-// Summary
-const byWho = {};
-tasks.forEach(t => {
-  const w = t.who || 'Не назначено';
-  byWho[w] = (byWho[w] || 0) + 1;
-});
-const summary = document.getElementById('summaryRow');
-const total = document.createElement('div');
-total.className = 'stat';
-total.innerHTML = `<span class="stat-num">${tasks.length}</span><span class="stat-label">Всего задач</span>`;
-summary.appendChild(total);
-Object.entries(byWho).forEach(([name, cnt]) => {
-  const s = document.createElement('div');
-  s.className = 'stat';
-  s.innerHTML = `<span class="stat-num">${cnt}</span><span class="stat-label">${name}</span>`;
-  summary.appendChild(s);
-});
+    // Checkbox
+    const cc=mk('div','cell check-cell');
+    const cb=mk('input','');cb.type='checkbox';cb.checked=t.done;
+    cb.onchange=()=>{t.done=cb.checked;render();};
+    cc.appendChild(cb);row.appendChild(cc);
+
+    // Name
+    const lc=mk('div','cell label-cell');
+    const inp=mk('input','task-name-input');inp.type='text';inp.value=t.name;
+    inp.onchange=e=>{t.name=e.target.value;};
+    lc.appendChild(inp);row.appendChild(lc);
+
+    // Who
+    const wc=mk('div','cell who-cell');
+    const sel=mk('select','who-select');
+    sel.style.background=ws.lt;sel.style.color=ws.bg;
+    PERSONS.forEach(p=>{
+      const o=mk('option','');o.value=p;o.textContent=p||'—';if(p===t.who)o.selected=true;
+      sel.appendChild(o);
+    });
+    sel.onchange=e=>{
+      t.who=e.target.value;
+      const nws=WC[t.who]||WC[''];
+      sel.style.background=nws.lt;sel.style.color=nws.bg;
+      render();
+    };
+    wc.appendChild(sel);row.appendChild(wc);
+
+    // Timeline
+    const tlr=mk('div','tl-row');tlr.style.flex='1';
+    ALL_DAYS.forEach(d=>{
+      const slot=mk('div','day-slot'+(d===TODAY_STR?' today-s':''));
+      const inRange=d>=t.start&&d<=t.end;
+      const isS=d===t.start,isE=d===t.end;
+
+      if(inRange){
+        const bw=mk('div','bar-wrap');
+        const bar=mk('div','bar'+(isS&&isE?' bse':isS?' bs':isE?' be':''));
+        bar.style.background=t.done?'#B0AD9E':ws.bg;
+        if(t.done)bar.style.opacity='.35';
+        bw.appendChild(bar);slot.appendChild(bw);
+        if(isE){const dd=mk('div','ddot');slot.appendChild(dd);}
+      }
+
+      if(d===TODAY_STR){const tline=mk('div','today-line');slot.appendChild(tline);}
+
+      slot.onclick=e=>{
+        if(e.shiftKey){if(d<=t.end){t.start=d;render();}}
+        else{if(d>=t.start){t.end=d;render();}}
+      };
+      tlr.appendChild(slot);
+    });
+    row.appendChild(tlr);
+
+    // Delete
+    const dc=mk('div','cell del-cell');
+    const db=mk('button','del-btn');db.textContent='✕';db.title='Удалить';
+    db.onclick=()=>{tasks=tasks.filter(x=>x.id!==t.id);render();};
+    dc.appendChild(db);row.appendChild(dc);
+
+    b.appendChild(row);
+  });
+}
+
+function buildSummary(){
+  const s=document.getElementById('summary');s.innerHTML='';
+  const done=tasks.filter(t=>t.done).length;
+  const byWho={};
+  tasks.forEach(t=>{const w=t.who||'—';byWho[w]=(byWho[w]||0)+1;});
+  addStat(s,tasks.length,'Всего');
+  addStat(s,done,'Готово ✓');
+  addStat(s,tasks.length-done,'В работе');
+  Object.entries(byWho).forEach(([n,c])=>addStat(s,c,n));
+}
+
+function addStat(p,n,l){
+  const d=mk('div','stat');
+  d.innerHTML=`<span class="stat-n">${n}</span><span class="stat-l">${l}</span>`;
+  p.appendChild(d);
+}
+
+function buildLegend(){
+  const l=document.getElementById('legend');l.innerHTML='';
+  [['Артём','#3A7BF7'],['Ильмира','#0FA874'],['Игорь','#D14F8A'],['—','#B0AD9E']].forEach(([n,c])=>{
+    l.innerHTML+=`<div class="li"><div class="ld" style="background:${c}"></div>${n}</div>`;
+  });
+}
+
+function addTask(){
+  tasks.push({id:nextId++,name:'Новая задача',start:TODAY_STR,end:TODAY_STR,who:'',done:false});
+  render();
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll('.task-name-input');
+    if(inputs.length)inputs[inputs.length-1].focus();
+  },50);
+}
+
+render();
 </script>
 </body>
 </html>
