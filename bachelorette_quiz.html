@@ -40,6 +40,7 @@ body {
 #deck {
   position: relative;
   width: 100vw; height: 100vh;
+  perspective: 1200px;
 }
 .slide {
   position: absolute; inset: 0;
@@ -48,7 +49,6 @@ body {
   padding: 40px 60px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.55s ease;
 }
 .slide.active {
   opacity: 1;
@@ -57,6 +57,79 @@ body {
 .slide.exit {
   opacity: 0;
   pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+/* ── Crazy entrance animations ─────────────────────── */
+@keyframes t-spin {
+  from { transform: rotate(-540deg) scale(0.1); opacity: 0; }
+  to   { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+@keyframes t-zoom {
+  0%   { transform: scale(0.05); opacity: 0; }
+  60%  { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes t-flipY {
+  0%   { transform: rotateY(90deg) scale(0.6); opacity: 0; }
+  50%  { transform: rotateY(-12deg) scale(1.04); opacity: 1; }
+  75%  { transform: rotateY(5deg); }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+@keyframes t-bounceUp {
+  0%   { transform: translateY(80vh); opacity: 0; }
+  55%  { transform: translateY(-28px); opacity: 1; }
+  72%  { transform: translateY(12px); }
+  87%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes t-rubber {
+  0%   { transform: scale(0); opacity: 0; }
+  25%  { transform: scaleX(1.35) scaleY(0.65); opacity: 1; }
+  45%  { transform: scaleX(0.7) scaleY(1.35); }
+  62%  { transform: scaleX(1.18) scaleY(0.82); }
+  78%  { transform: scaleX(0.93) scaleY(1.07); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes t-glitch {
+  0%   { transform: translate(-30px,0) skewX(25deg); opacity: 0; filter: hue-rotate(0deg) saturate(3); }
+  20%  { transform: translate(20px,-5px) skewX(-12deg); opacity:.6; filter: hue-rotate(120deg) saturate(2); }
+  40%  { transform: translate(-12px,3px) skewX(6deg); filter: hue-rotate(240deg); }
+  60%  { transform: translate(7px,-2px) skewX(-3deg); opacity:1; filter: hue-rotate(360deg) saturate(1); }
+  80%  { transform: translate(-3px,1px) skewX(1deg); }
+  100% { transform: translate(0,0) skewX(0deg); opacity:1; filter:none; }
+}
+@keyframes t-slideRight {
+  0%   { transform: translateX(100vw) rotate(10deg); opacity: 0; }
+  55%  { transform: translateX(-22px) rotate(-3deg); opacity: 1; }
+  75%  { transform: translateX(10px) rotate(1.5deg); }
+  90%  { transform: translateX(-4px) rotate(-0.5deg); }
+  100% { transform: translateX(0) rotate(0deg); opacity: 1; }
+}
+@keyframes t-wobbly {
+  0%   { transform: rotate(-30deg) scale(0); opacity: 0; }
+  28%  { transform: rotate(14deg) scale(0.82); opacity:.75; }
+  48%  { transform: rotate(-9deg) scale(1.08); opacity:1; }
+  66%  { transform: rotate(5deg) scale(0.96); }
+  82%  { transform: rotate(-2deg) scale(1.02); }
+  100% { transform: rotate(0deg) scale(1); opacity:1; }
+}
+@keyframes t-drop {
+  0%   { transform: translateY(-100vh) rotate(-22deg); opacity: 0; }
+  52%  { transform: translateY(25px) rotate(5deg); opacity: 1; }
+  70%  { transform: translateY(-12px) rotate(-2deg); }
+  84%  { transform: translateY(6px) rotate(1deg); }
+  100% { transform: translateY(0) rotate(0deg); opacity:1; }
+}
+@keyframes t-deck-shake {
+  0%,100%{ transform: translate(0,0) rotate(0deg); }
+  12%{ transform: translate(-14px,3px) rotate(-0.8deg); }
+  25%{ transform: translate(14px,-3px) rotate(0.8deg); }
+  38%{ transform: translate(-10px,2px) rotate(-0.5deg); }
+  50%{ transform: translate(10px,-2px) rotate(0.5deg); }
+  62%{ transform: translate(-6px,1px); }
+  75%{ transform: translate(6px,-1px); }
+  87%{ transform: translate(-3px,0); }
 }
 
 /* Frosted card behind each slide content */
@@ -425,7 +498,7 @@ body {
   <!-- Q1: На каком фото Ирина? -->
   <div class="slide" id="s-q1">
     <div class="slide-card" style="max-width:min(94vw,860px)">
-      <div class="eyebrow">Вопрос 1 из 11</div>
+      <div class="eyebrow">Вопрос 1 из 12</div>
       <p class="question-text">На каком фото Ирина?</p>
       <div class="photo-grid" id="q1-grid">
         <div class="photo-item" id="ph1"><img src="quiz_images/image1.jpg" alt="Фото 1" loading="eager"><div class="photo-num">1</div></div>
@@ -449,7 +522,7 @@ body {
   <!-- Q2: В каком году? -->
   <div class="slide" id="s-q2">
     <div class="slide-card">
-      <div class="eyebrow">Вопрос 2 из 11</div>
+      <div class="eyebrow">Вопрос 2 из 12</div>
       <p class="question-text">В каком году начали встречаться<br>Ирина и Никита?</p>
       <div class="options" id="q2-opts">
         <div class="opt" id="o-a"><div class="opt-letter">А</div><span>2014</span></div>
@@ -475,7 +548,7 @@ body {
   <!-- Q3: Мем -->
   <div class="slide" id="s-q3">
     <div class="slide-card">
-      <div class="eyebrow">Вопрос 3 из 11</div>
+      <div class="eyebrow">Вопрос 3 из 12</div>
       <p class="question-text">Какой мем про Ирину?</p>
       <div class="meme-placeholder" id="meme-q">
         <div class="icon">🖼️</div>
@@ -498,7 +571,7 @@ body {
   <!-- Q4: Напитки -->
   <div class="slide" id="s-q4">
     <div class="slide-card" style="max-width:min(94vw,960px)">
-      <div class="eyebrow">Вопрос 4 из 11</div>
+      <div class="eyebrow">Вопрос 4 из 12</div>
       <p class="question-text" style="margin-bottom:20px">Соедините: какой напиток<br>Ирина держит в руках?</p>
       <div class="drinks-section">
         <div class="drinks-grid" id="drinks-grid">
@@ -550,7 +623,7 @@ body {
   <!-- Q5: Что между ног у Леры? (видео-вопрос) -->
   <div class="slide" id="s-q5">
     <div class="slide-card" style="max-width:min(94vw,800px)">
-      <div class="eyebrow">Вопрос 5 из 11</div>
+      <div class="eyebrow">Вопрос 5 из 12</div>
       <p class="question-text">Что между ног у Леры?</p>
       <video class="slide-video" id="v-q5" src="quiz_images/1_2.MOV" autoplay loop muted playsinline></video>
     </div>
@@ -567,7 +640,7 @@ body {
   <!-- Q6: Какой цвет и длина у Ирины? (фото 1) -->
   <div class="slide" id="s-q6">
     <div class="slide-card" style="max-width:min(94vw,800px)">
-      <div class="eyebrow">Вопрос 6 из 11</div>
+      <div class="eyebrow">Вопрос 6 из 12</div>
       <p class="question-text" style="margin-bottom:16px">Какой цвет и длина волос у Ирины?</p>
       <div class="q-img-wrap"><img src="quiz_images/2_2.JPG" alt=""></div>
     </div>
@@ -584,7 +657,7 @@ body {
   <!-- Q7: Какой цвет и длина у Ирины? (фото 2) -->
   <div class="slide" id="s-q7">
     <div class="slide-card" style="max-width:min(94vw,800px)">
-      <div class="eyebrow">Вопрос 7 из 11</div>
+      <div class="eyebrow">Вопрос 7 из 12</div>
       <p class="question-text" style="margin-bottom:16px">Какой цвет и длина волос у Ирины?</p>
       <div class="q-img-wrap"><img src="quiz_images/3_3.JPG" alt=""></div>
     </div>
@@ -601,7 +674,7 @@ body {
   <!-- Q8: Какой цвет и длина у Ирины? (фото 3) -->
   <div class="slide" id="s-q8">
     <div class="slide-card" style="max-width:min(94vw,800px)">
-      <div class="eyebrow">Вопрос 8 из 11</div>
+      <div class="eyebrow">Вопрос 8 из 12</div>
       <p class="question-text" style="margin-bottom:16px">Какой цвет и длина волос у Ирины?</p>
       <div class="q-img-wrap"><img src="quiz_images/4_4.JPG" alt=""></div>
     </div>
@@ -618,7 +691,7 @@ body {
   <!-- Q9: Какую надпись замазали? (фото 1) -->
   <div class="slide" id="s-q9">
     <div class="slide-card" style="max-width:min(94vw,800px)">
-      <div class="eyebrow">Вопрос 9 из 11</div>
+      <div class="eyebrow">Вопрос 9 из 12</div>
       <p class="question-text" style="margin-bottom:16px">Какую надпись мы замазали?</p>
       <div class="q-img-wrap"><img src="quiz_images/5_5.JPG" alt=""></div>
     </div>
@@ -635,7 +708,7 @@ body {
   <!-- Q10: Какую надпись замазали? (фото 2) -->
   <div class="slide" id="s-q10">
     <div class="slide-card" style="max-width:min(94vw,800px)">
-      <div class="eyebrow">Вопрос 10 из 11</div>
+      <div class="eyebrow">Вопрос 10 из 12</div>
       <p class="question-text" style="margin-bottom:16px">Какую надпись мы замазали?</p>
       <div class="q-img-wrap"><img src="quiz_images/6_6.JPG" alt=""></div>
     </div>
@@ -652,7 +725,7 @@ body {
   <!-- Q11: Что произошло на видео? -->
   <div class="slide" id="s-q11">
     <div class="slide-card" style="max-width:min(94vw,800px)">
-      <div class="eyebrow">Вопрос 11 из 11</div>
+      <div class="eyebrow">Вопрос 11 из 12</div>
       <p class="question-text">Что произошло на видео?</p>
       <video class="slide-video" id="v-q11" src="quiz_images/7_7.MOV" autoplay loop muted playsinline></video>
     </div>
@@ -663,6 +736,27 @@ body {
     <div class="slide-card" style="max-width:min(94vw,800px)">
       <div class="eyebrow">✨ Правильный ответ ✨</div>
       <video class="answer-video" id="v-a11" src="quiz_images/7.MOV" autoplay loop muted playsinline controls></video>
+    </div>
+  </div>
+
+  <!-- Q12: Нарзаник -->
+  <div class="slide" id="s-q12">
+    <div class="slide-card">
+      <div class="eyebrow">Вопрос 12 из 12</div>
+      <p class="question-text">Что такое нарзаник<br>по мнению Никиты?</p>
+    </div>
+  </div>
+
+  <!-- A12: Narzan image -->
+  <div class="slide" id="s-a12">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <img class="answer-img-full" src="quiz_images/Narzan.jpg" alt="Нарзаник"
+           onerror="this.style.display='none';document.getElementById('narzan-ph').style.display='flex'">
+      <div class="meme-placeholder" id="narzan-ph" style="display:none">
+        <div class="icon">🥤</div>
+        <p>Добавьте фото нарзаника<br><code style="font-size:.75rem;opacity:.6">quiz_images/Narzan.jpg</code></p>
+      </div>
     </div>
   </div>
 
@@ -699,8 +793,49 @@ const SLIDES = [
   's-q9','s-a9',
   's-q10','s-a10',
   's-q11','s-a11',
+  's-q12','s-a12',
   's-final'
 ];
+
+// Entrance animation per slide index (matches SLIDES order)
+const ENTER_ANIM = [
+  null,           // 0  welcome
+  't-spin',       // 1  rules
+  't-bounceUp',   // 2  q1
+  't-zoom',       // 3  a1
+  't-slideRight', // 4  q2
+  't-rubber',     // 5  a2
+  't-wobbly',     // 6  q3
+  't-glitch',     // 7  a3
+  't-drop',       // 8  q4
+  't-spin',       // 9  a4
+  't-slideRight', // 10 q5
+  't-zoom',       // 11 a5
+  't-wobbly',     // 12 q6
+  't-rubber',     // 13 a6
+  't-glitch',     // 14 q7
+  't-bounceUp',   // 15 a7
+  't-drop',       // 16 q8
+  't-spin',       // 17 a8
+  't-slideRight', // 18 q9
+  't-zoom',       // 19 a9
+  't-wobbly',     // 20 q10
+  't-rubber',     // 21 a10
+  't-glitch',     // 22 q11
+  't-bounceUp',   // 23 a11
+  't-drop',       // 24 q12
+  't-spin',       // 25 a12
+  't-zoom',       // 26 final
+];
+
+// Shake screen on answer slides
+const SHAKE_ON = new Set([3,5,7,9,11,13,15,17,19,21,23,25,26]);
+
+function shakeScreen(){
+  const deck = document.getElementById('deck');
+  deck.style.animation = 't-deck-shake 0.4s ease-out';
+  setTimeout(()=>{ deck.style.animation = ''; }, 420);
+}
 
 let cur = 0;
 let animLock = false;
@@ -724,14 +859,25 @@ function goTo(idx){
   animLock = true;
   const prev = document.getElementById(SLIDES[cur]);
   const next = document.getElementById(SLIDES[idx]);
+
   prev.classList.remove('active');
   prev.classList.add('exit');
-  setTimeout(()=>prev.classList.remove('exit'), 600);
+
+  if(SHAKE_ON.has(idx)) shakeScreen();
+
+  const anim = ENTER_ANIM[idx];
+  if(anim) next.style.animation = `${anim} 0.65s ease-out both`;
+
   next.classList.add('active');
   cur = idx;
   updateDots();
   onSlideEnter(SLIDES[cur]);
-  setTimeout(()=>{ animLock=false; }, 700);
+
+  setTimeout(()=>{
+    prev.classList.remove('exit');
+    next.style.animation = '';
+    animLock = false;
+  }, 820);
 }
 
 function advance(){
@@ -759,7 +905,7 @@ function onSlideEnter(id){
   if(vid) { vid.currentTime=0; vid.play().catch(()=>{}); }
 
   // Confetti on all answer slides
-  const answerSlides=['s-a5','s-a6','s-a7','s-a8','s-a9','s-a10','s-a11'];
+  const answerSlides=['s-a5','s-a6','s-a7','s-a8','s-a9','s-a10','s-a11','s-a12'];
   if(answerSlides.includes(id)) launchConfetti(50);
 }
 
