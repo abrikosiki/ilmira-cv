@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Викторина — Девичник Ирины</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --bg:    #F2F0E8;
+  --green: #8B9E76;
+  --gl:    #C5D4B5;
+  --cream: #FEFADB;
+  --beige: #D5CFC4;
+  --brown: #3A2115;
+  --gold:  #C9A84C;
+  --gold2: #A07830;
+  --dim:   rgba(58,33,21,0.45);
+  --glow:  0 0 30px rgba(139,158,118,0.5), 0 0 60px rgba(139,158,118,0.25);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Mosaic background */
+body {
+  background-color: var(--bg);
+  background-image: url('quiz_images/fon.png');
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  color: var(--brown);
+  font-family: 'Inter', system-ui, sans-serif;
+  height: 100vh; width: 100vw;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Slides ─────────────────────────────────────────────── */
+#deck {
+  position: relative;
+  width: 100vw; height: 100vh;
+}
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 60px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.slide.exit {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Frosted card behind each slide content */
+.slide-card {
+  background: rgba(242,240,232,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255,255,255,0.6);
+  border-radius: 24px;
+  padding: 44px 56px;
+  display: flex; flex-direction: column;
+  align-items: center;
+  max-width: min(94vw, 1000px);
+  width: 100%;
+  box-shadow: 0 8px 40px rgba(58,33,21,0.18);
+}
+
+/* ── Progress dots ──────────────────────────────────────── */
+#dots {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 7px; z-index: 20;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(58,33,21,0.2);
+  transition: background .3s, transform .3s;
+}
+.dot.on { background: var(--green); transform: scale(1.4); }
+
+/* ── Hint ───────────────────────────────────────────────── */
+#hint {
+  position: fixed; bottom: 42px; right: 28px;
+  font-size: .72rem; color: var(--dim);
+  font-family: 'Inter', sans-serif; letter-spacing: .08em;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:.85} }
+
+/* ── Confetti canvas ────────────────────────────────────── */
+#confetti {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 50;
+}
+
+/* ── Typography ─────────────────────────────────────────── */
+.eyebrow {
+  font-size: clamp(.7rem, 1.5vw, 1rem);
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--green); margin-bottom: 14px;
+  font-weight: 700;
+}
+.big-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  font-weight: 900; line-height: 1.1;
+  text-align: center; color: var(--brown);
+}
+.sub {
+  font-size: clamp(.9rem, 2vw, 1.3rem);
+  color: var(--dim); text-align: center;
+  line-height: 1.55; margin-top: 18px;
+  max-width: 700px;
+}
+.question-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  font-weight: 700; text-align: center;
+  line-height: 1.25; max-width: 900px;
+  color: var(--brown);
+  margin-bottom: 36px;
+}
+.answer-big {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.8rem, 7vw, 6rem);
+  font-weight: 900; text-align: center;
+  color: var(--gold2);
+  text-shadow: 0 2px 0 rgba(58,33,21,0.15);
+  animation: answerPop 0.7s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes answerPop {
+  from { transform: scale(.5) rotate(-4deg); opacity:0; }
+  to   { transform: scale(1) rotate(0deg);   opacity:1; }
+}
+.answer-sub {
+  font-size: clamp(.9rem, 2vw, 1.3rem);
+  color: var(--dim); text-align: center;
+  margin-top: 14px; animation: fadeUp .6s .4s both;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── Divider ────────────────────────────────────────────── */
+.divider {
+  width: 60px; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  margin: 20px auto;
+}
+
+/* ── Rules list ─────────────────────────────────────────── */
+.rules {
+  list-style: none; margin-top: 10px;
+  display: flex; flex-direction: column; gap: 18px;
+  max-width: 600px;
+}
+.rules li {
+  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  color: var(--brown); display: flex; gap: 14px; align-items: flex-start;
+  animation: fadeUp .5s both;
+}
+.rules li:nth-child(2){animation-delay:.15s}
+.rules li:nth-child(3){animation-delay:.3s}
+.rules li span.ico { font-size: 1.5em; flex-shrink:0; }
+
+/* ── Photo grid (Q1) ────────────────────────────────────── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  max-width: min(80vh, 760px);
+  width: 100%;
+}
+.photo-item {
+  position: relative; border-radius: 12px; overflow: hidden;
+  aspect-ratio: 1;
+  border: 3px solid rgba(242,240,232,.15);
+  transition: all .4s;
+}
+.photo-item img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+}
+.photo-num {
+  position: absolute; top: 8px; left: 8px;
+  background: rgba(0,0,0,.6);
+  color: var(--cream); font-weight: 700;
+  font-size: 1.1rem; width: 32px; height: 32px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+/* Correct photo reveal */
+.photo-item.correct {
+  border-color: var(--gold);
+  box-shadow: 0 0 30px rgba(201,168,76,.6), 0 0 60px rgba(201,168,76,.3);
+  transform: scale(1.04);
+}
+.photo-item.wrong {
+  filter: blur(3px) brightness(.35);
+}
+
+/* ── Answer: single photo ───────────────────────────────── */
+.answer-photo {
+  width: min(45vh, 380px);
+  aspect-ratio: 1;
+  border-radius: 16px; overflow: hidden;
+  border: 4px solid var(--gold);
+  box-shadow: var(--glow);
+  animation: answerPop .7s cubic-bezier(.34,1.56,.64,1) both;
+  flex-shrink: 0;
+}
+.answer-photo img { width:100%; height:100%; object-fit:cover; }
+
+/* ── Options (Q2) ───────────────────────────────────────── */
+.options {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; width: 100%; max-width: 800px;
+}
+.opt {
+  background: rgba(213,207,196,0.45);
+  border: 2px solid var(--beige);
+  border-radius: 14px; padding: 18px 24px;
+  display: flex; gap: 16px; align-items: center;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  font-weight: 600; color: var(--brown);
+  transition: all .45s;
+}
+.opt-letter {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(139,158,118,.25); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1rem; flex-shrink:0;
+  transition: all .45s;
+}
+.opt.correct-opt {
+  background: rgba(139,158,118,.25);
+  border-color: var(--green);
+  box-shadow: var(--glow);
+  transform: scale(1.04);
+}
+.opt.correct-opt .opt-letter {
+  background: var(--green); color: #fff;
+}
+.opt.wrong-opt {
+  opacity: .2; filter: grayscale(1);
+}
+
+/* ── Answer year slide ──────────────────────────────────── */
+.year-imgs {
+  display: flex; gap: 24px; margin-top: 20px;
+  max-height: 35vh;
+}
+.year-imgs img {
+  height: 100%; max-height: 35vh; max-width: 40vw;
+  object-fit: cover; border-radius: 14px;
+  animation: fadeUp .6s .5s both;
+}
+
+/* ── Matching question (Q4) ─────────────────────────────── */
+.drinks-section { display:flex; gap:40px; align-items:flex-start; width:100%; max-width:900px; }
+.drinks-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; flex:1;
+}
+.drink-item {
+  border-radius: 10px; overflow:hidden;
+  aspect-ratio: .85; position:relative;
+  border: 2px solid var(--beige);
+}
+.drink-item img { width:100%; height:100%; object-fit:cover; }
+.drink-label {
+  position:absolute; bottom:0; left:0; right:0;
+  background: rgba(58,33,21,.65);
+  color:#fff; font-weight:700;
+  text-align:center; padding:4px; font-size:.9rem;
+  backdrop-filter:blur(4px);
+}
+.drink-answer-badge {
+  position:absolute; top:6px; right:6px;
+  background: var(--green); color: #fff;
+  font-weight:700; border-radius:6px;
+  padding:3px 10px; font-size:.9rem;
+  transform:scale(0); transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+.drink-item.revealed .drink-answer-badge { transform:scale(1); }
+
+.drinks-options {
+  display:flex; flex-direction:column; gap:12px;
+  padding-top:10px; font-size:clamp(.9rem,1.8vw,1.2rem);
+}
+.drinks-options div {
+  color:var(--brown); padding:8px 16px;
+  background:rgba(213,207,196,.5);
+  border-radius:8px; border-left:3px solid var(--green);
+}
+
+/* ── Matching answer (A4) ───────────────────────────────── */
+.match-list {
+  display:flex; flex-direction:column; gap:18px;
+  margin-top:10px;
+}
+.match-row {
+  display:flex; align-items:center; gap:16px;
+  opacity:0; transform:translateX(-30px);
+  transition: opacity .4s, transform .4s;
+  font-size:clamp(1rem, 2.2vw, 1.5rem);
+  color: var(--brown);
+}
+.match-row.show { opacity:1; transform:translateX(0); }
+.match-num {
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(139,158,118,.2); border:2px solid var(--green);
+  color:var(--green); font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.1rem; flex-shrink:0;
+}
+.match-arrow { color:var(--green); font-size:1.5rem; flex-shrink:0; }
+.match-answer { font-weight:700; }
+.match-drink { color:var(--dim); font-size:.9em; margin-left:4px; }
+.match-img {
+  width:60px; height:60px; border-radius:8px; object-fit:cover;
+  border:2px solid var(--green); flex-shrink:0;
+}
+
+/* ── Meme placeholder ───────────────────────────────────── */
+.meme-placeholder {
+  width:min(50vw,400px); aspect-ratio:4/3;
+  border:3px dashed rgba(58,33,21,.2);
+  border-radius:16px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  color:var(--dim); gap:10px;
+  background: rgba(213,207,196,.3);
+}
+.meme-placeholder .icon { font-size:3rem; }
+.meme-placeholder p { font-size:.85rem; text-align:center; line-height:1.5; padding:0 20px; }
+
+/* ── Sparkles ───────────────────────────────────────────── */
+.sparkle {
+  position:absolute; width:8px; height:8px;
+  border-radius:50%; pointer-events:none;
+  animation: sparkleAnim 1s ease-out forwards;
+}
+@keyframes sparkleAnim {
+  0%   { transform:scale(0) translate(0,0); opacity:1; }
+  100% { transform:scale(1.5) translate(var(--tx),var(--ty)); opacity:0; }
+}
+
+/* ── Video slides ───────────────────────────────────────── */
+.slide-video {
+  width: 100%; max-height: 52vh;
+  border-radius: 14px; object-fit: contain;
+  background: #000;
+  margin-top: 8px;
+}
+.answer-video {
+  width: min(80vw, 680px); max-height: 55vh;
+  border-radius: 16px; object-fit: contain;
+  border: 3px solid var(--green);
+  box-shadow: var(--glow);
+  animation: answerPop .7s cubic-bezier(.34,1.56,.64,1) both;
+  background: #000;
+}
+
+/* ── Single answer image (large) ────────────────────────── */
+.answer-img-full {
+  max-width: min(78vw, 680px);
+  max-height: 58vh;
+  border-radius: 16px;
+  object-fit: contain;
+  border: 3px solid var(--green);
+  box-shadow: var(--glow);
+  animation: answerPop .7s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+/* ── Question with single image ─────────────────────────── */
+.q-img-wrap {
+  width: 100%; max-height: 52vh;
+  display: flex; justify-content: center;
+}
+.q-img-wrap img {
+  max-width: 100%; max-height: 52vh;
+  border-radius: 14px; object-fit: contain;
+  border: 2px solid var(--beige);
+}
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- WELCOME -->
+  <div class="slide active" id="s-welcome">
+    <div class="slide-card">
+      <div class="eyebrow">Девичник Ирины 💍</div>
+      <h1 class="big-title">Добро пожаловать,<br>весёлые девчонки!</h1>
+      <div class="divider"></div>
+      <p class="sub">Сегодня нас ждёт весёлая викторина, смех<br>и много классных моментов</p>
+    </div>
+  </div>
+
+  <!-- RULES -->
+  <div class="slide" id="s-rules">
+    <div class="slide-card">
+      <div class="eyebrow">Как играем</div>
+      <h2 class="big-title" style="font-size:clamp(2rem,4vw,3.2rem)">Правила игры</h2>
+      <div class="divider"></div>
+      <ul class="rules">
+        <li><span class="ico">🥂</span><span>Обновите бокалы перед стартом</span></li>
+        <li><span class="ico">✍️</span><span>Возьмите листочки и ручки — считаем баллы</span></li>
+        <li><span class="ico">🎯</span><span>За каждый правильный ответ — 1 балл. Победителя ждёт приз!</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Q1: На каком фото Ирина? -->
+  <div class="slide" id="s-q1">
+    <div class="slide-card" style="max-width:min(94vw,860px)">
+      <div class="eyebrow">Вопрос 1 из 11</div>
+      <p class="question-text">На каком фото Ирина?</p>
+      <div class="photo-grid" id="q1-grid">
+        <div class="photo-item" id="ph1"><img src="quiz_images/image1.jpg" alt="Фото 1" loading="eager"><div class="photo-num">1</div></div>
+        <div class="photo-item" id="ph2"><img src="quiz_images/image2.jpg" alt="Фото 2" loading="eager"><div class="photo-num">2</div></div>
+        <div class="photo-item" id="ph3"><img src="quiz_images/image3.jpg" alt="Фото 3" loading="eager"><div class="photo-num">3</div></div>
+        <div class="photo-item" id="ph4"><img src="quiz_images/image4.jpg" alt="Фото 4" loading="eager"><div class="photo-num">4</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- A1: Ответ — фото 1 -->
+  <div class="slide" id="s-a1">
+    <div class="slide-card">
+      <div class="answer-photo" id="a1-photo"><img src="quiz_images/image1.jpg" alt="Ирина"></div>
+      <div class="divider" style="margin-top:22px"></div>
+      <div class="answer-big" style="font-size:clamp(2rem,4vw,3.5rem); margin-top:6px">Да! Это Ирина! 🎉</div>
+      <p class="answer-sub">Если угадал — произнеси короткий тост для неё! 🥂🥂</p>
+    </div>
+  </div>
+
+  <!-- Q2: В каком году? -->
+  <div class="slide" id="s-q2">
+    <div class="slide-card">
+      <div class="eyebrow">Вопрос 2 из 11</div>
+      <p class="question-text">В каком году начали встречаться<br>Ирина и Никита?</p>
+      <div class="options" id="q2-opts">
+        <div class="opt" id="o-a"><div class="opt-letter">А</div><span>2014</span></div>
+        <div class="opt" id="o-b"><div class="opt-letter">Б</div><span>2013</span></div>
+        <div class="opt" id="o-c"><div class="opt-letter">В</div><span>2026</span></div>
+        <div class="opt" id="o-d"><div class="opt-letter">Г</div><span>2010</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- A2: 2014 -->
+  <div class="slide" id="s-a2">
+    <div class="slide-card">
+      <div class="answer-big">2014 ГОД ❤️</div>
+      <div class="divider" style="margin-top:20px"></div>
+      <div class="year-imgs" id="year-imgs">
+        <img src="quiz_images/image5.jpg" alt="">
+        <img src="quiz_images/image6.jpg" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3: Мем -->
+  <div class="slide" id="s-q3">
+    <div class="slide-card">
+      <div class="eyebrow">Вопрос 3 из 11</div>
+      <p class="question-text">Какой мем про Ирину?</p>
+      <div class="meme-placeholder" id="meme-q">
+        <div class="icon">🖼️</div>
+        <p>Сюда добавьте картинку с мемом<br><code style="font-size:.75rem;opacity:.6">quiz_images/meme_q.jpg</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- A3: Ответ мем -->
+  <div class="slide" id="s-a3">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <div class="meme-placeholder" id="meme-a">
+        <div class="icon">✨</div>
+        <p>Сюда добавьте картинку с правильным ответом<br><code style="font-size:.75rem;opacity:.6">quiz_images/meme_a.jpg</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4: Напитки -->
+  <div class="slide" id="s-q4">
+    <div class="slide-card" style="max-width:min(94vw,960px)">
+      <div class="eyebrow">Вопрос 4 из 11</div>
+      <p class="question-text" style="margin-bottom:20px">Соедините: какой напиток<br>Ирина держит в руках?</p>
+      <div class="drinks-section">
+        <div class="drinks-grid" id="drinks-grid">
+          <div class="drink-item" id="d1"><img src="quiz_images/image7.jpg" alt=""><div class="drink-label">Фото 1</div><div class="drink-answer-badge" id="db1">А</div></div>
+          <div class="drink-item" id="d2"><img src="quiz_images/image8.jpg" alt=""><div class="drink-label">Фото 2</div><div class="drink-answer-badge" id="db2">Г</div></div>
+          <div class="drink-item" id="d3"><img src="quiz_images/image9.jpg" alt=""><div class="drink-label">Фото 3</div><div class="drink-answer-badge" id="db3">Б</div></div>
+          <div class="drink-item" id="d4"><img src="quiz_images/image10.jpg" alt=""><div class="drink-label">Фото 4</div><div class="drink-answer-badge" id="db4">В</div></div>
+        </div>
+        <div class="drinks-options">
+          <div>А — вино</div>
+          <div>Б — водка</div>
+          <div>В — пиво</div>
+          <div>Г — шампанское</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- A4: Правильный ответ -->
+  <div class="slide" id="s-a4">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <div class="divider"></div>
+      <div class="match-list" id="match-list">
+        <div class="match-row" id="mr1">
+          <img class="match-img" src="quiz_images/image7.jpg" alt="">
+          <div class="match-num">1</div><div class="match-arrow">→</div>
+          <div class="match-answer">А <span class="match-drink">— вино</span></div>
+        </div>
+        <div class="match-row" id="mr2">
+          <img class="match-img" src="quiz_images/image8.jpg" alt="">
+          <div class="match-num">2</div><div class="match-arrow">→</div>
+          <div class="match-answer">Г <span class="match-drink">— шампанское</span></div>
+        </div>
+        <div class="match-row" id="mr3">
+          <img class="match-img" src="quiz_images/image9.jpg" alt="">
+          <div class="match-num">3</div><div class="match-arrow">→</div>
+          <div class="match-answer">Б <span class="match-drink">— водка</span></div>
+        </div>
+        <div class="match-row" id="mr4">
+          <img class="match-img" src="quiz_images/image10.jpg" alt="">
+          <div class="match-num">4</div><div class="match-arrow">→</div>
+          <div class="match-answer">В <span class="match-drink">— пиво</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5: Что между ног у Леры? (видео-вопрос) -->
+  <div class="slide" id="s-q5">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">Вопрос 5 из 11</div>
+      <p class="question-text">Что между ног у Леры?</p>
+      <video class="slide-video" id="v-q5" src="quiz_images/1_2.MOV" autoplay loop muted playsinline></video>
+    </div>
+  </div>
+
+  <!-- A5: Ответ -->
+  <div class="slide" id="s-a5">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <img class="answer-img-full" src="quiz_images/1.JPG" alt="Ответ">
+    </div>
+  </div>
+
+  <!-- Q6: Какой цвет и длина у Ирины? (фото 1) -->
+  <div class="slide" id="s-q6">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">Вопрос 6 из 11</div>
+      <p class="question-text" style="margin-bottom:16px">Какой цвет и длина волос у Ирины?</p>
+      <div class="q-img-wrap"><img src="quiz_images/2_2.JPG" alt=""></div>
+    </div>
+  </div>
+
+  <!-- A6 -->
+  <div class="slide" id="s-a6">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <img class="answer-img-full" src="quiz_images/2.JPG" alt="Ответ">
+    </div>
+  </div>
+
+  <!-- Q7: Какой цвет и длина у Ирины? (фото 2) -->
+  <div class="slide" id="s-q7">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">Вопрос 7 из 11</div>
+      <p class="question-text" style="margin-bottom:16px">Какой цвет и длина волос у Ирины?</p>
+      <div class="q-img-wrap"><img src="quiz_images/3_3.JPG" alt=""></div>
+    </div>
+  </div>
+
+  <!-- A7 -->
+  <div class="slide" id="s-a7">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <img class="answer-img-full" src="quiz_images/3.JPG" alt="Ответ">
+    </div>
+  </div>
+
+  <!-- Q8: Какой цвет и длина у Ирины? (фото 3) -->
+  <div class="slide" id="s-q8">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">Вопрос 8 из 11</div>
+      <p class="question-text" style="margin-bottom:16px">Какой цвет и длина волос у Ирины?</p>
+      <div class="q-img-wrap"><img src="quiz_images/4_4.JPG" alt=""></div>
+    </div>
+  </div>
+
+  <!-- A8 -->
+  <div class="slide" id="s-a8">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <img class="answer-img-full" src="quiz_images/4.JPG" alt="Ответ">
+    </div>
+  </div>
+
+  <!-- Q9: Какую надпись замазали? (фото 1) -->
+  <div class="slide" id="s-q9">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">Вопрос 9 из 11</div>
+      <p class="question-text" style="margin-bottom:16px">Какую надпись мы замазали?</p>
+      <div class="q-img-wrap"><img src="quiz_images/5_5.JPG" alt=""></div>
+    </div>
+  </div>
+
+  <!-- A9 -->
+  <div class="slide" id="s-a9">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <img class="answer-img-full" src="quiz_images/5.JPG" alt="Ответ">
+    </div>
+  </div>
+
+  <!-- Q10: Какую надпись замазали? (фото 2) -->
+  <div class="slide" id="s-q10">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">Вопрос 10 из 11</div>
+      <p class="question-text" style="margin-bottom:16px">Какую надпись мы замазали?</p>
+      <div class="q-img-wrap"><img src="quiz_images/6_6.JPG" alt=""></div>
+    </div>
+  </div>
+
+  <!-- A10 -->
+  <div class="slide" id="s-a10">
+    <div class="slide-card">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <img class="answer-img-full" src="quiz_images/6.JPG" alt="Ответ">
+    </div>
+  </div>
+
+  <!-- Q11: Что произошло на видео? -->
+  <div class="slide" id="s-q11">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">Вопрос 11 из 11</div>
+      <p class="question-text">Что произошло на видео?</p>
+      <video class="slide-video" id="v-q11" src="quiz_images/7_7.MOV" autoplay loop muted playsinline></video>
+    </div>
+  </div>
+
+  <!-- A11: видео-ответ -->
+  <div class="slide" id="s-a11">
+    <div class="slide-card" style="max-width:min(94vw,800px)">
+      <div class="eyebrow">✨ Правильный ответ ✨</div>
+      <video class="answer-video" id="v-a11" src="quiz_images/7.MOV" autoplay loop muted playsinline controls></video>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div class="slide" id="s-final">
+    <div class="slide-card">
+      <div style="font-size:4rem; animation:answerPop .7s both">🎉</div>
+      <h1 class="big-title" style="margin-top:16px">Викторина завершена!</h1>
+      <div class="divider"></div>
+      <p class="sub">Ирина, с тебя тост за самую умную подругу 🥂<br>Поздравляем невесту!</p>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<div id="dots"></div>
+<div id="hint">нажмите чтобы продолжить →</div>
+<canvas id="confetti"></canvas>
+
+<script>
+'use strict';
+
+// ── Slide order ───────────────────────────────────────────
+const SLIDES = [
+  's-welcome','s-rules',
+  's-q1','s-a1',
+  's-q2','s-a2',
+  's-q3','s-a3',
+  's-q4','s-a4',
+  's-q5','s-a5',
+  's-q6','s-a6',
+  's-q7','s-a7',
+  's-q8','s-a8',
+  's-q9','s-a9',
+  's-q10','s-a10',
+  's-q11','s-a11',
+  's-final'
+];
+
+let cur = 0;
+let animLock = false;
+
+// ── Progress dots ─────────────────────────────────────────
+const dotsEl = document.getElementById('dots');
+SLIDES.forEach((_,i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0?' on':'');
+  dotsEl.appendChild(d);
+});
+function updateDots(){
+  dotsEl.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.toggle('on', i===cur);
+  });
+}
+
+// ── Slide change ──────────────────────────────────────────
+function goTo(idx){
+  if(animLock || idx<0 || idx>=SLIDES.length) return;
+  animLock = true;
+  const prev = document.getElementById(SLIDES[cur]);
+  const next = document.getElementById(SLIDES[idx]);
+  prev.classList.remove('active');
+  prev.classList.add('exit');
+  setTimeout(()=>prev.classList.remove('exit'), 600);
+  next.classList.add('active');
+  cur = idx;
+  updateDots();
+  onSlideEnter(SLIDES[cur]);
+  setTimeout(()=>{ animLock=false; }, 700);
+}
+
+function advance(){
+  if(cur < SLIDES.length-1) goTo(cur+1);
+}
+
+document.addEventListener('click', advance);
+document.addEventListener('keydown', e=>{
+  if(e.key===' '||e.key==='ArrowRight'||e.key==='Enter') { e.preventDefault(); advance(); }
+  if(e.key==='ArrowLeft') { e.preventDefault(); if(cur>0) goTo(cur-1); }
+});
+
+// ── Per-slide entrance logic ──────────────────────────────
+function onSlideEnter(id){
+  // Pause all videos first
+  document.querySelectorAll('video').forEach(v=>{ v.pause(); });
+
+  if(id==='s-a1') revealQ1();
+  if(id==='s-a2') { revealQ2(); launchConfetti(60); }
+  if(id==='s-a4') revealQ4();
+  if(id==='s-final') launchConfetti(120);
+
+  // Play video on question/answer slides that have them
+  const vid = document.querySelector('#'+id+' video');
+  if(vid) { vid.currentTime=0; vid.play().catch(()=>{}); }
+
+  // Confetti on all answer slides
+  const answerSlides=['s-a5','s-a6','s-a7','s-a8','s-a9','s-a10','s-a11'];
+  if(answerSlides.includes(id)) launchConfetti(50);
+}
+
+// ── Q1 reveal: blur wrong, highlight correct ──────────────
+function revealQ1(){
+  setTimeout(()=>{
+    document.getElementById('ph1').classList.add('correct');
+    document.getElementById('ph2').classList.add('wrong');
+    document.getElementById('ph3').classList.add('wrong');
+    document.getElementById('ph4').classList.add('wrong');
+    spawnSparkles(document.getElementById('ph1'));
+  }, 400);
+}
+
+// ── Q2 reveal: correct glow, others dim ──────────────────
+function revealQ2(){
+  setTimeout(()=>{
+    document.getElementById('o-a').classList.add('correct-opt');
+    document.getElementById('o-b').classList.add('wrong-opt');
+    document.getElementById('o-c').classList.add('wrong-opt');
+    document.getElementById('o-d').classList.add('wrong-opt');
+  }, 350);
+}
+
+// ── Q4 reveal: match rows slide in ───────────────────────
+function revealQ4(){
+  ['mr1','mr2','mr3','mr4'].forEach((id, i) => {
+    setTimeout(()=>{
+      document.getElementById(id).classList.add('show');
+    }, 250 + i*220);
+  });
+}
+
+// ── Sparkles around element ───────────────────────────────
+function spawnSparkles(el){
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top  + rect.height/2;
+  const colors = ['#C9A84C','#F0D080','#8B9E76','#F2F0E8','#fff'];
+  for(let i=0;i<18;i++){
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    const angle = (i/18)*Math.PI*2;
+    const dist = 60+Math.random()*80;
+    s.style.cssText = `
+      left:${cx}px; top:${cy}px;
+      background:${colors[i%colors.length]};
+      --tx:${Math.cos(angle)*dist}px;
+      --ty:${Math.sin(angle)*dist}px;
+      animation-delay:${Math.random()*0.3}s;
+    `;
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(), 1300);
+  }
+}
+
+// ── Confetti ──────────────────────────────────────────────
+const canvas = document.getElementById('confetti');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize',()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; });
+
+let particles=[], raf=null;
+const COLORS=['#8B9E76','#C5D4B5','#D5CFC4','#3A2115','#FEFADB','#A3C48A','#C9A84C'];
+
+function launchConfetti(count=80){
+  for(let i=0;i<count;i++){
+    particles.push({
+      x: Math.random()*canvas.width,
+      y: -10 - Math.random()*200,
+      r: 4+Math.random()*6,
+      d: Math.random()*count,
+      color: COLORS[Math.floor(Math.random()*COLORS.length)],
+      tilt: Math.random()*10-10,
+      tiltAngle: 0,
+      tiltSpeed: 0.1+Math.random()*0.1,
+      speed: 2+Math.random()*3,
+      shape: Math.random()<.5?'rect':'circle',
+    });
+  }
+  if(!raf) drawConfetti();
+}
+
+function drawConfetti(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  let alive=false;
+  particles.forEach(p=>{
+    p.tiltAngle += p.tiltSpeed;
+    p.y += p.speed;
+    p.tilt = Math.sin(p.tiltAngle)*12;
+    ctx.beginPath();
+    ctx.fillStyle = p.color;
+    if(p.shape==='circle'){
+      ctx.arc(p.x+p.tilt, p.y, p.r, 0, Math.PI*2);
+    } else {
+      ctx.rect(p.x+p.tilt, p.y, p.r*2, p.r);
+    }
+    ctx.fill();
+    if(p.y < canvas.height+20) alive=true;
+  });
+  particles = particles.filter(p=>p.y<canvas.height+20);
+  if(alive){ raf=requestAnimationFrame(drawConfetti); }
+  else { raf=null; ctx.clearRect(0,0,canvas.width,canvas.height); }
+}
+</script>
+</body>
+</html>
