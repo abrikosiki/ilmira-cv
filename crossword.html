@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Кроссворд</title>
+<style>
+:root {
+  --bg:    #F2F0E8;
+  --green: #8B9E76;
+  --gl:    #C5D4B5;
+  --cream: #FEFADB;
+  --beige: #D5CFC4;
+  --brown: #3A2115;
+  --white: #FFFFFF;
+  --cs: 36px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--brown);
+  font-family: Georgia, serif;
+  min-height: 100vh;
+}
+
+/* Progress */
+#pb-wrap { height: 5px; background: var(--beige); position: sticky; top: 0; z-index: 10; }
+#pb { height: 100%; background: var(--green); width: 0%; transition: width .5s; }
+#pt {
+  text-align: center;
+  padding: 5px 0 4px;
+  font-size: .7rem;
+  font-family: system-ui, sans-serif;
+  opacity: .6;
+}
+
+/* Grid */
+#grid-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 12px 8px 8px;
+  overflow: hidden;
+}
+#gt {
+  border-collapse: collapse;
+  border: 2px solid var(--brown);
+  transform-origin: top center;
+  flex-shrink: 0;
+}
+td { width: var(--cs); height: var(--cs); padding: 0; }
+.cell {
+  width: var(--cs); height: var(--cs);
+  background: var(--white);
+  border: 1px solid var(--beige);
+  display: flex; align-items: center; justify-content: center;
+  font-size: calc(var(--cs) * 0.44);
+  font-weight: bold; text-transform: uppercase;
+  cursor: pointer; position: relative;
+  user-select: none; -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.cell.empty { background: var(--bg); border-color: var(--bg); cursor: default; }
+.cn {
+  position: absolute; top: 1px; left: 2px;
+  font-size: calc(var(--cs) * 0.22);
+  font-family: system-ui, sans-serif;
+  line-height: 1; pointer-events: none;
+}
+.cl { pointer-events: none; line-height: 1; }
+.cell.wa  { background: #E8F0DF; }
+.cell.sel { background: var(--cream); outline: 2px solid var(--green); outline-offset: -2px; }
+.cell.ok  { background: var(--green); color: var(--white); }
+.cell.ok .cn { color: rgba(255,255,255,.65); }
+@keyframes bnc {
+  0%  { transform: scale(1); }
+  35% { transform: scale(.8); }
+  65% { transform: scale(1.2); }
+  100%{ transform: scale(1); }
+}
+.cell.bnc { animation: bnc .2s ease; }
+
+/* Active clue strip */
+#active-clue {
+  background: var(--white);
+  border-top: 1px solid var(--beige);
+  border-bottom: 2px solid var(--beige);
+  padding: 8px 14px 10px;
+  min-height: 52px;
+  position: sticky;
+  top: 5px;
+  z-index: 9;
+}
+#acd {
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--green); font-family: system-ui, sans-serif; margin-bottom: 3px;
+}
+#act { font-size: .9rem; line-height: 1.4; }
+#acn { font-weight: bold; color: var(--green); }
+
+/* Clue list */
+#clue-list {
+  padding: 12px 10px 32px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.cl-section-title {
+  font-size: .65rem; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--green); font-family: system-ui, sans-serif;
+  padding: 10px 4px 6px;
+  border-bottom: 1px solid var(--beige);
+  margin-bottom: 4px;
+}
+.ci {
+  display: flex; gap: 8px; align-items: baseline;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ci:active { background: var(--beige); }
+.ci.active-ci { background: var(--cream); }
+.ci.done-ci { opacity: .45; }
+.ci.done-ci .ci-text { text-decoration: line-through; }
+.ci-num {
+  font-size: .72rem; font-weight: bold; color: var(--green);
+  font-family: system-ui, sans-serif;
+  min-width: 22px; flex-shrink: 0; padding-top: 1px;
+}
+.ci-text { font-size: .88rem; line-height: 1.35; }
+
+/* Reaction popup */
+@keyframes popin {
+  from { transform: scale(.4); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
+#rxn {
+  display: none; position: fixed; inset: 0;
+  background: rgba(58,33,21,.72); z-index: 50;
+  align-items: center; justify-content: center; cursor: pointer;
+}
+#rxn.on { display: flex; }
+#rxn img {
+  max-width: 82vw; max-height: 72vh;
+  border-radius: 14px; object-fit: contain;
+  box-shadow: 0 6px 40px rgba(0,0,0,.5);
+  animation: popin .28s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* Win screen */
+#win {
+  display: none; position: fixed; inset: 0;
+  background: rgba(58,33,21,.9); z-index: 100;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+  text-align: center; padding: 24px;
+}
+#win.on { display: flex; }
+#win img {
+  max-width: 65vw; max-height: 45vh;
+  border-radius: 16px; object-fit: contain;
+  animation: popin .4s cubic-bezier(.34,1.56,.64,1);
+}
+#win p { color: var(--bg); font-size: 1.5rem; line-height: 1.4; }
+
+#hi {
+  position: fixed; top: -999px; left: -999px;
+  opacity: 0; width: 1px; height: 1px;
+}
+</style>
+</head>
+<body>
+
+<div id="pb-wrap"><div id="pb"></div></div>
+<div id="pt">0 из 19 слов</div>
+
+<div id="grid-wrap"><table id="gt"><tbody id="gb"></tbody></table></div>
+
+<div id="active-clue">
+  <div id="acd">Нажми на ячейку</div>
+  <div id="act"><span id="acn"></span><span id="acb"> чтобы начать</span></div>
+</div>
+
+<div id="clue-list">
+  <div class="cl-section-title">По горизонтали →</div>
+  <div id="cl-h"></div>
+  <div class="cl-section-title" style="margin-top:10px">По вертикали ↓</div>
+  <div id="cl-v"></div>
+</div>
+
+<div id="rxn" onclick="hideRxn()"><img id="ri" src="" alt=""></div>
+<div id="win"><img id="wi" src="" alt=""><p>Ирина, ты красавица! 🎉<br>Все слова угаданы!</p></div>
+<input id="hi" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" inputmode="text">
+
+<script>
+'use strict';
+
+const WORDS = [
+  {id:1,  a:'ЛИЛОВЫЙ',    q:'Цвет дресс-кода на свадьбе Лии?'},
+  {id:2,  a:'КОРОНА',     q:'Какое пиво Лия урвала по акции?'},
+  {id:3,  a:'ГУСЬ',       q:'Тотемное животное Лии'},
+  {id:4,  a:'БУТУСОВ',    q:'Любимый певец Гали, которого она путает с группой'},
+  {id:5,  a:'БЛЕЙЗЕР',    q:'Какой напиток ваш с Лерой «любимый»?'},
+  {id:6,  a:'РОССИЯ',     q:'Гостиница, куда Лере предложили поехать в НВМСК'},
+  {id:7,  a:'КОНТАКТ',    q:'В какую игру любили играть в институте?'},
+  {id:8,  a:'СЕКСИ',      q:'Мы уже не студентки, но всё ещё...'},
+  {id:9,  a:'ВИНО',       q:'Классический спутник сырной тарелки'},
+  {id:10, a:'СЕЛЕДКА',    q:'Закуска под разговоры и рюмочку'},
+  {id:11, a:'ВОДКА',      q:'То, что внезапно хочется с солёным огурчиком'},
+  {id:12, a:'ГОВНО',      q:'Что Лера предлагала съесть за деньги?'},
+  {id:13, a:'МЯУ',        q:'Что Галя написала подводкой у Серёжи на лбу?'},
+  {id:14, a:'ПОМИДОРЫ',   q:'Банку с чем Никита атаковал вилкой?'},
+  {id:15, a:'ЛЯГУШКА',    q:'Что было у Марины в шкафу?'},
+  {id:16, a:'ДОШИРАК',    q:'Идеальный завтрак Ильмиры после похмелья?'},
+  {id:17, a:'ПЯТИЭТАЖКА', q:'Чего Ильмира не ожидала от Новомосковска?'},
+  {id:18, a:'БЕСХОЗНЫЕ',  q:'Как Никита называл Галю и Ильмиру?'},
+  {id:19, a:'ПИВО',       q:'К чему любовь Иры оказалась ложью?'},
+];
+
+const RXNS = [
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8fzb1gveP-lIknmRhUUMg4sYl2ySkYXzzKQ&s",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSk97v21gaRGNZoKoTu8lAffwLpaPy3ojMyWA&s",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaPZU3esLTJnKMMxuAxHgmxDsWP6a_BWI10g&s",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSeArjhk-VhqdApnPdNY1qEKYo4r9aBWv1BLg&s",
+  "https://media.tenor.com/pYJ2w7_sfucAAAAe/%D0%BA%D0%BE%D1%82-%D0%BA%D0%BE%D1%82-%D1%85%D0%BB%D0%BE%D0%BF%D0%B0%D0%B5%D1%82.png",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQTpX8b2e1ymPdXC2FemSNnoCWzt8peaVWSg&s",
+  "https://png.pngtree.com/png-vector/20250129/ourmid/pngtree-clapping-hands-emoji-for-memes-and-social-media-png-image_15371593.png",
+  "https://png.pngtree.com/background/20231022/original/pngtree-man-clapping-polite-black-formal-photo-picture-image_5676047.jpg",
+  "https://media.tenor.com/1NbSwtG7kf8AAAAe/monkey-great-job.png",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYYBdUjVm-u01mHuaJsfQcn_1_1ArPrapiig&s",
+  "https://zooofoto.ru/foto/1073/kartinka_krysy_mem_11.webp"
+];
+
+// ── Layout algorithm ──────────────────────────────────────────────────────
+
+function buildGrid(words) {
+  const sorted = [...words].sort((a,b) => b.a.length - a.a.length);
+  const G = 60, C = 30;
+  const grid = {};
+  const placed = [];
+
+  const gc = (r,c) => grid[r+','+c] || null;
+  const sc = (r,c,l) => { grid[r+','+c] = l; };
+
+  function canPlace(ans, r0, c0, dir, allowIso) {
+    const dr = dir==='V'?1:0, dc = dir==='H'?1:0, n = ans.length;
+    if (gc(r0-dr, c0-dc)) return false;
+    if (gc(r0+dr*n, c0+dc*n)) return false;
+    let hit = false;
+    for (let i=0; i<n; i++) {
+      const r=r0+dr*i, c=c0+dc*i;
+      if (r<0||r>=G||c<0||c>=G) return false;
+      const ex = gc(r,c);
+      if (ex !== null) {
+        if (ex !== ans[i]) return false;
+        hit = true;
+      } else {
+        const n1 = dir==='H' ? gc(r-1,c) : gc(r,c-1);
+        const n2 = dir==='H' ? gc(r+1,c) : gc(r,c+1);
+        if (n1||n2) return false;
+      }
+    }
+    return hit || placed.length===0 || allowIso;
+  }
+
+  function doPlace(word, r0, c0, dir) {
+    const dr = dir==='V'?1:0, dc = dir==='H'?1:0;
+    for (let i=0; i<word.a.length; i++) sc(r0+dr*i, c0+dc*i, word.a[i]);
+    placed.push({word, row:r0, col:c0, dir});
+  }
+
+  function bds() {
+    let r0=G,r1=0,c0=G,c1=0;
+    placed.forEach(p => {
+      const dr=p.dir==='V'?1:0, dc=p.dir==='H'?1:0;
+      r0=Math.min(r0,p.row); r1=Math.max(r1,p.row+dr*(p.word.a.length-1));
+      c0=Math.min(c0,p.col); c1=Math.max(c1,p.col+dc*(p.word.a.length-1));
+    });
+    return {r0,r1,c0,c1};
+  }
+
+  function scoreP(ans, r0, c0, dir) {
+    const dr=dir==='V'?1:0, dc=dir==='H'?1:0;
+    let x=0;
+    for (let i=0;i<ans.length;i++) if (gc(r0+dr*i, c0+dc*i)) x+=20;
+    const b=bds();
+    const er=r0+dr*(ans.length-1), ec=c0+dc*(ans.length-1);
+    const area=(Math.max(b.r1,er)-Math.min(b.r0,r0)+1)*(Math.max(b.c1,ec)-Math.min(b.c0,c0)+1);
+    return x - area;
+  }
+
+  doPlace(sorted[0], C, C - Math.floor(sorted[0].a.length/2), 'H');
+
+  for (let wi=1; wi<sorted.length; wi++) {
+    const word = sorted[wi];
+    let best=null, bScore=-Infinity;
+
+    for (const p of placed) {
+      const opp = p.dir==='H'?'V':'H';
+      const dr=p.dir==='V'?1:0, dc=p.dir==='H'?1:0;
+      for (let pi=0; pi<p.word.a.length; pi++) {
+        for (let wi2=0; wi2<word.a.length; wi2++) {
+          if (p.word.a[pi] !== word.a[wi2]) continue;
+          const pr=p.row+dr*pi, pc=p.col+dc*pi;
+          const ndr=opp==='V'?1:0, ndc=opp==='H'?1:0;
+          const nr=pr-ndr*wi2, nc=pc-ndc*wi2;
+          if (!canPlace(word.a, nr, nc, opp, false)) continue;
+          const sc=scoreP(word.a, nr, nc, opp);
+          if (sc>bScore) { bScore=sc; best={r:nr,c:nc,dir:opp}; }
+        }
+      }
+    }
+
+    if (best) {
+      doPlace(word, best.r, best.c, best.dir);
+    } else {
+      const b=bds();
+      let ok=false;
+      for (let att=0; att<20&&!ok; att++) {
+        const r=b.r0+att, c=b.c1+3;
+        if (canPlace(word.a, r, c, 'H', true)) { doPlace(word,r,c,'H'); ok=true; }
+        else {
+          const c2=b.c0-word.a.length-2;
+          if (canPlace(word.a, r, c2, 'H', true)) { doPlace(word,r,c2,'H'); ok=true; }
+        }
+      }
+    }
+  }
+
+  const b=bds();
+  const rows=b.r1-b.r0+1, cols=b.c1-b.c0+1;
+  const norm=placed.map(p => ({word:p.word, row:p.row-b.r0, col:p.col-b.c0, dir:p.dir}));
+
+  const cm={};
+  norm.forEach((p,idx)=>{
+    const dr=p.dir==='V'?1:0, dc=p.dir==='H'?1:0;
+    for(let i=0;i<p.word.a.length;i++){
+      const key=(p.row+dr*i)+','+(p.col+dc*i);
+      if(!cm[key]) cm[key]={letter:p.word.a[i], words:[]};
+      cm[key].words.push({idx, li:i});
+    }
+  });
+
+  const startsByKey={};
+  norm.forEach((p,idx)=>{
+    const key=p.row+','+p.col;
+    if(!startsByKey[key]) startsByKey[key]={row:p.row,col:p.col};
+    startsByKey[key].idxs = (startsByKey[key].idxs||[]).concat(idx);
+  });
+  const keyToNum={};
+  let num=1;
+  Object.keys(startsByKey).sort((a,b)=>{
+    const sa=startsByKey[a], sb=startsByKey[b];
+    return sa.row!==sb.row ? sa.row-sb.row : sa.col-sb.col;
+  }).forEach(k=>{ keyToNum[k]=num++; });
+  norm.forEach(p=>{ p.number=keyToNum[p.row+','+p.col]; });
+
+  return {placed:norm, cm, rows, cols};
+}
+
+// ── Build ─────────────────────────────────────────────────────────────────
+
+const {placed, cm, rows, cols} = buildGrid(WORDS);
+
+// Scale grid to fit viewport (transform keeps cells at full 36px size)
+function fitGrid() {
+  const table = document.getElementById('gt');
+  const wrap  = document.getElementById('grid-wrap');
+  table.style.transform = '';
+  const tW = table.offsetWidth;
+  const tH = table.offsetHeight;
+  const avail = window.innerWidth - 16;
+  if (tW > avail) {
+    const scale = avail / tW;
+    table.style.transform = `scale(${scale})`;
+    // Compensate height since transform doesn't affect layout flow
+    wrap.style.height = (tH * scale + 16) + 'px';
+    wrap.style.alignItems = 'flex-start';
+    // Shift table up to fill collapsed space
+    table.style.marginBottom = -( tH * (1 - scale)) + 'px';
+  } else {
+    wrap.style.height = '';
+    table.style.marginBottom = '';
+  }
+}
+window.addEventListener('resize', fitGrid);
+
+const startNum={};
+placed.forEach(p=>{
+  const k=p.row+','+p.col;
+  startNum[k] = startNum[k] ? Math.min(startNum[k],p.number) : p.number;
+});
+
+const gb=document.getElementById('gb');
+const els={};
+
+for(let r=0;r<rows;r++){
+  const tr=document.createElement('tr');
+  for(let c=0;c<cols;c++){
+    const key=r+','+c;
+    const td=document.createElement('td');
+    const div=document.createElement('div');
+    div.dataset.key=key;
+    if(cm[key]){
+      div.className='cell';
+      if(startNum[key]){
+        const ns=document.createElement('span');
+        ns.className='cn'; ns.textContent=startNum[key];
+        div.appendChild(ns);
+      }
+      const ls=document.createElement('span');
+      ls.className='cl'; div.appendChild(ls);
+      div.addEventListener('pointerdown', e=>{e.preventDefault(); onCell(key);});
+    } else {
+      div.className='cell empty';
+    }
+    td.appendChild(div); tr.appendChild(td);
+    els[key]=div;
+  }
+  gb.appendChild(tr);
+}
+
+// ── Clue list ─────────────────────────────────────────────────────────────
+
+// Sort placed by number for list
+const byDir = {H: [], V: []};
+placed.forEach((p,idx) => byDir[p.dir].push({p, idx}));
+byDir.H.sort((a,b)=>a.p.number-b.p.number);
+byDir.V.sort((a,b)=>a.p.number-b.p.number);
+
+const clueEls = {}; // idx -> div.ci
+
+function renderClueList(items, container) {
+  items.forEach(({p, idx}) => {
+    const div = document.createElement('div');
+    div.className = 'ci';
+    div.dataset.idx = idx;
+    const num = document.createElement('span');
+    num.className = 'ci-num';
+    num.textContent = p.number + '.';
+    const txt = document.createElement('span');
+    txt.className = 'ci-text';
+    txt.textContent = p.word.q;
+    div.appendChild(num);
+    div.appendChild(txt);
+    div.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      selectWord(idx, 0);
+      // scroll grid into view
+      document.getElementById('grid-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+      hi.focus();
+    });
+    container.appendChild(div);
+    clueEls[idx] = div;
+  });
+}
+
+renderClueList(byDir.H, document.getElementById('cl-h'));
+renderClueList(byDir.V, document.getElementById('cl-v'));
+
+// ── State ─────────────────────────────────────────────────────────────────
+
+let selIdx=null, curLi=0;
+const solved=new Set();
+const user={};
+
+// ── Selection ─────────────────────────────────────────────────────────────
+
+function onCell(key){
+  if(!cm[key]) return;
+  const wis=cm[key].words.map(w=>w.idx);
+  let idx, li;
+  if(wis.length===1){
+    idx=wis[0]; li=cm[key].words[0].li;
+  } else {
+    const other=wis.find(i=>i!==selIdx)??wis[0];
+    idx=other; li=cm[key].words.find(w=>w.idx===other)?.li??0;
+  }
+  selectWord(idx, li);
+  hi.focus();
+}
+
+function selectWord(idx, li) {
+  selIdx=idx; curLi=li;
+  redraw(); showActiveClue(); highlightClueItem();
+}
+
+function redraw(){
+  Object.values(els).forEach(el=>el.classList.remove('wa','sel'));
+  if(selIdx===null) return;
+  const p=placed[selIdx];
+  if(solved.has(p.word.id)) return;
+  const dr=p.dir==='V'?1:0, dc=p.dir==='H'?1:0;
+  for(let i=0;i<p.word.a.length;i++){
+    const k=(p.row+dr*i)+','+(p.col+dc*i);
+    const el=els[k];
+    if(!el||el.classList.contains('ok')) continue;
+    el.classList.add(i===curLi?'sel':'wa');
+  }
+}
+
+function showActiveClue(){
+  if(selIdx===null) return;
+  const p=placed[selIdx];
+  document.getElementById('acd').textContent=p.dir==='H'?'По горизонтали →':'По вертикали ↓';
+  document.getElementById('acn').textContent=p.number+'. ';
+  document.getElementById('acb').textContent=p.word.q;
+}
+
+function highlightClueItem(){
+  Object.values(clueEls).forEach(el=>el.classList.remove('active-ci'));
+  if(selIdx!==null && clueEls[selIdx]) clueEls[selIdx].classList.add('active-ci');
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────
+
+const hi=document.getElementById('hi');
+
+hi.addEventListener('keydown', e=>{
+  if(e.key==='Backspace'){e.preventDefault(); doBack(); return;}
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault(); moveCur(1);}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault(); moveCur(-1);}
+});
+
+hi.addEventListener('input', ()=>{
+  const v=hi.value; hi.value='';
+  if(!v||selIdx===null) return;
+  doLetter(v.slice(-1).toUpperCase());
+});
+
+function doLetter(letter){
+  if(selIdx===null) return;
+  const p=placed[selIdx];
+  if(solved.has(p.word.id)) return;
+  const dr=p.dir==='V'?1:0, dc=p.dir==='H'?1:0;
+  const key=(p.row+dr*curLi)+','+(p.col+dc*curLi);
+  user[key]=letter;
+  const el=els[key];
+  el.querySelector('.cl').textContent=letter;
+  bnc(el);
+  if(curLi<p.word.a.length-1){curLi++; redraw();}
+  checkWord(selIdx);
+}
+
+function doBack(){
+  if(selIdx===null) return;
+  const p=placed[selIdx];
+  if(solved.has(p.word.id)) return;
+  const dr=p.dir==='V'?1:0, dc=p.dir==='H'?1:0;
+  const key=(p.row+dr*curLi)+','+(p.col+dc*curLi);
+  if(user[key]){
+    delete user[key];
+    els[key].querySelector('.cl').textContent='';
+  } else if(curLi>0){
+    curLi--;
+    const k2=(p.row+dr*curLi)+','+(p.col+dc*curLi);
+    delete user[k2];
+    els[k2].querySelector('.cl').textContent='';
+    redraw();
+  }
+}
+
+function moveCur(d){
+  if(selIdx===null) return;
+  const p=placed[selIdx];
+  const n=Math.max(0,Math.min(p.word.a.length-1,curLi+d));
+  if(n!==curLi){curLi=n; redraw();}
+}
+
+// ── Check ─────────────────────────────────────────────────────────────────
+
+function checkWord(idx){
+  const p=placed[idx];
+  const dr=p.dir==='V'?1:0, dc=p.dir==='H'?1:0;
+  for(let i=0;i<p.word.a.length;i++){
+    const k=(p.row+dr*i)+','+(p.col+dc*i);
+    if((user[k]||'')!==p.word.a[i]) return;
+  }
+  solved.add(p.word.id);
+  for(let i=0;i<p.word.a.length;i++){
+    const k=(p.row+dr*i)+','+(p.col+dc*i);
+    setTimeout(()=>els[k].classList.add('ok'), i*55);
+  }
+  // Mark clue as done
+  if(clueEls[idx]){
+    setTimeout(()=>{ clueEls[idx].classList.remove('active-ci'); clueEls[idx].classList.add('done-ci'); }, p.word.a.length*55+100);
+  }
+  selIdx=null; redraw(); highlightClueItem();
+  document.getElementById('acd').textContent='Правильно! 🌿';
+  document.getElementById('acn').textContent='';
+  document.getElementById('acb').textContent='';
+  updateP();
+  setTimeout(showRxn, p.word.a.length*55+150);
+  if(solved.size===WORDS.length) setTimeout(showWin,1800);
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────
+
+function updateP(){
+  const pct=solved.size/WORDS.length*100;
+  document.getElementById('pb').style.width=pct+'%';
+  document.getElementById('pt').textContent=solved.size+' из '+WORDS.length+' слов';
+}
+
+// ── Reactions ─────────────────────────────────────────────────────────────
+
+let rxnT=null;
+function showRxn(){
+  const url=RXNS[Math.floor(Math.random()*RXNS.length)];
+  document.getElementById('ri').src=url;
+  document.getElementById('rxn').classList.add('on');
+  clearTimeout(rxnT);
+  rxnT=setTimeout(hideRxn,2600);
+}
+function hideRxn(){ document.getElementById('rxn').classList.remove('on'); }
+
+function showWin(){
+  hideRxn();
+  document.getElementById('wi').src=RXNS[Math.floor(Math.random()*RXNS.length)];
+  document.getElementById('win').classList.add('on');
+}
+
+// ── Bounce ────────────────────────────────────────────────────────────────
+
+function bnc(el){
+  el.classList.remove('bnc');
+  void el.offsetWidth;
+  el.classList.add('bnc');
+  el.addEventListener('animationend',()=>el.classList.remove('bnc'),{once:true});
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+
+updateP();
+
+// Fit grid after first paint
+requestAnimationFrame(() => requestAnimationFrame(fitGrid));
+
+let fi=0;
+for(const[,el] of Object.entries(els)){
+  if(!el.classList.contains('empty')){
+    el.style.opacity='0';
+    setTimeout(()=>{ el.style.opacity='1'; el.style.transition='opacity .25s'; }, fi++*7);
+  }
+}
+</script>
+</body>
+</html>
